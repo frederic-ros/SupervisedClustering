@@ -1,0 +1,42 @@
+genpoint_s: false
+createmodel: false
+use_fuzzy: false
+testmodel_synthetic: true
+testmodel_real: false
+deeplearning_methods: false
+experiments_synthetic: false 
+experiments_real: false
+
+epoch: 50
+dev_training: 0.3
+
+dimtraining_start: 2
+dimtraining_end: 33
+
+ourmethod_parameter: [0.8,0.9]
+
+Hamming_ratio_training: 0.01
+n_set_per_dimension: 1
+maxdev_test: 0.3
+
+option_test_synthetique: 0
+dimension_test: 2
+n_synthetic_tests: 50
+Hamming_ratio_test: 0.01
+percentage_noise: 0.15
+
+low_method_number: 14
+Up_method_number: 15
+
+realdata: "Highrealdata/d32"
+saverealresult: "resultsreal/highdim"
+savesyntheticresult: "resultsynthetique/all/result"
+
+n_samples_per_datasets: 1000
+dimension_of_p_embedding: 10
+
+name_training_data: "data.txt"
+name_model: "models/modelhybrid2-32novel"
+
+Option_model: 0
+draw_graphics: true

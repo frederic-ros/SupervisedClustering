@@ -1,0 +1,4 @@
+IIC: true
+SCAN: false
+DEPICT: true
+dataset: "MNIST"
