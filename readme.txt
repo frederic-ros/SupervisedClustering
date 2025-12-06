@@ -17,7 +17,7 @@ A neighborhood-based clustering method (our proposed approach)
 
 A large collection of competitor algorithms
 
-Deep-learning baselines (DEC, VADE, simplified DEC, etc.)
+Deep-learning baselines (DEC, VADE, etc.) and Deep learning codes ICC, DEPICT and SCAN specific to two image datasets.
 
 A complete experimental pipeline for reproducing all results from the paper
 
@@ -102,7 +102,11 @@ Flag	Description
 --testmodel_synthetic	evaluate on synthetic datasets
 --testmodel_real	evaluate on real datasets
 --deeplearning_methods	run DEC / VADE baselines specific to two images datasets.
+--experiments_synthetic directly call a function with double loops to test synthetic data with any methods, any dimensions... 
+--experiments_real      directly call a fonction to handle datasets stored in a directory
 
+parser.add_argument("--experiments_synthetic", type=bool, default=False)
+    parser.add_argument("--experiments_real"
 Example:
 
 1. Generate training data
@@ -145,7 +149,6 @@ global statistics aggregated across datasets
 .txt files summarizing results for each method
 
 All results are stored under:
-
 resultsynthetic/
 resultsreal/
 
