@@ -26,6 +26,7 @@ from F_util import G_simplestatistics, compute_stats_by_criterion, compute_custo
 from F_launchdeeplearning import launchdeeplearning
 from F_newidee import genpoint
 from F_yaml import load_yaml_if_exists
+from F_savesyntheticdata import save_xy_to_txt
 import matplotlib
 import matplotlib.pyplot as plt
 
@@ -53,9 +54,9 @@ def get_config() -> Namespace:
 
     parser.add_argument("--genpoint_s", type=bool, default=False)
     parser.add_argument("--createmodel", type=bool, default=False)
-    parser.add_argument("--use_fuzzy", type=bool, default=False)
-    parser.add_argument("--testmodel_synthetic", type=bool, default=False)
-    parser.add_argument("--testmodel_real", type=bool, default=True)
+    parser.add_argument("--use_fuzzy", type=bool, default=True)
+    parser.add_argument("--testmodel_synthetic", type=bool, default=True)
+    parser.add_argument("--testmodel_real", type=bool, default=False)
     parser.add_argument("--deeplearning_methods", type=bool, default=False)
     parser.add_argument("--experiments_synthetic", type=bool, default=False)
     parser.add_argument("--experiments_real", type=bool, default=False)
@@ -63,21 +64,24 @@ def get_config() -> Namespace:
     parser.add_argument("--dev_training", type=float, default=0.3)
     parser.add_argument("--dimtraining_start", type=int, default=2)
     parser.add_argument("--dimtraining_end", type=int, default= 33)
-    parser.add_argument("--ourmethod_parameter", type=float, nargs='+', default=[0.5,0.6, 0.7, 0.8])
+    parser.add_argument("--ourmethod_parameter", type=float, nargs='+', default=[0.5, 0.6, 0.7, 0.8])
     parser.add_argument("--Hamming_ratio_training", type=float, default=0.01)   
     parser.add_argument("--n_set_per_dimension", type=int, default=1)
     parser.add_argument("--maxdev_test", type=float, default=0.33)
     parser.add_argument("--option_test_synthetique", type=int, default=0)
     parser.add_argument("--dimension_test", type=int, default=2)
     parser.add_argument("--n_synthetic_tests", type=int, default=10)
+    parser.add_argument("--savesyntheticoption", type=bool, default=True)
+    parser.add_argument("--savesynthethicdata", type=str, default="savesyntheticdata/level1")
     parser.add_argument("--Hamming_ratio_test", type=float, default=0.0)
     parser.add_argument("--percentage_noise", type=float, default=0.15)
-    parser.add_argument("--low_method_number", type=int, default=12)
-    parser.add_argument("--Up_method_number", type=int, default=13)
+    parser.add_argument("--low_method_number", type=int, default=14)
+    parser.add_argument("--Up_method_number", type=int, default=15)
     #parser.add_argument("--realdata", type=str,default="Highrealdata/d32")
-    parser.add_argument("--realdata", type=str,default="realdata")
+    parser.add_argument("--realdata", type=str,default="data2DFORME")
     #parser.add_argument("--saverealresult", type=str,default="resultsreal/mediumdim")
     parser.add_argument("--saverealresult", type=str,default="resultsreal/highdim")
+    parser.add_argument("--Optionsaveresultreal", type=bool, default=True)
     parser.add_argument("--savesyntheticresult", type=str,default="resultsynthetique/all/result")
     parser.add_argument("--n_samples_per_datasets", type=int, default=1000)
     parser.add_argument("--dimension_of_p_embedding", type=int, default=10)
@@ -87,8 +91,9 @@ def get_config() -> Namespace:
     #parser.add_argument("--name_model", type=str, default="models/modelhybridbis2")
     #parser.add_argument("--name_model", type=str, default="models/modelaffichage2-32novel")
     parser.add_argument("--Option_model", type=int, default=0)
-    parser.add_argument("--draw_graphics", type=bool, default=True)
-        
+    parser.add_argument("--draw_graphics", type=bool, default=True)   
+
+    
     return parser.parse_args()
 
 #...............YAML CONFIG......................................................
@@ -147,12 +152,11 @@ def getname(value=0):
 def TestModelReal(directory_path = "realdata",p_embedding=10,
                   namemodel="model",n_samples = 1000,T_method_low=0, T_method_up=1,
                   ourmethod_parameter=[0.4,0.8],
-                  nameresult="highdim/", optionPCA=False,draw = False):
+                  nameresult="highdim/", optionPCA=False, Optionsaveresultreal = False, draw = False):
         
     draw = draw
     scaler = StandardScaler()
-    save= True
-    
+    save= Optionsaveresultreal
     
     run = np.zeros(20,int)
     noise_methode = np.zeros(20,int)
@@ -189,7 +193,7 @@ def TestModelReal(directory_path = "realdata",p_embedding=10,
                                                           ourmethod_parameter=ourmethod_parameter,
                                                           draw=draw))
         
-    if  (T_method_low == T_method_up - 1) and len(y_l)>5:   #on teste une seule methode.  
+    if  (T_method_low == T_method_up - 1) and len(y_l)>=5:   #on teste une seule methode.  
         means = processstat(R,block_size=5)
         print("Means = ",means)
         means, stds,_=processstat_global(R, tri=True, CVI=CVI, threshold=0.1)
@@ -209,7 +213,11 @@ def TestModelSynthetique(n=1,dim=2, max_dev = 0.4,hamming_test=0.1,
                          n_samples = 1000,
                          p_noise=0.05,T_method_low=0, T_method_up=1,
                          Saveresult = "resultsynthetique/all/result",
+                         savesynthethicdata = "savesyntheticdata/level1",
+                         savesyntheticoption = False,
                          namemodel="model", draw=True):
+    
+                            
     Kv_in = 16
     Kv_out = 16
     
@@ -247,6 +255,10 @@ def TestModelSynthetique(n=1,dim=2, max_dev = 0.4,hamming_test=0.1,
                            max_dev = max_dev,hamming_distance=hamming_test,
                            p_noise=p_noise, n_clusters=C[i], index_random=i)
         
+        if savesyntheticoption == True: #option save synthetic.
+            F_name = savesynthethicdata + "/synthetic_" + str(i) + ".txt" 
+            save_xy_to_txt(X, y, filename=F_name)
+            
         if Competiteurs == True: R.append(Testcompetitors(X, y, run, noise, noise_methode,
                                                           namemodel=namemodel+".pth",draw = draw))
         
@@ -278,8 +290,11 @@ def Neighbordhoodmethod(genpoint_s = False,createmodel = False,
                         n_samples = 1000,
                         p_embedding = 10, training_data=None, 
                         namemodel = "models/model"+"hybrid2-31"+".pth",
+                        Optionsaveresultreal = False,
                         saverealresult = "resultsreal/highdim",
                         savesyntheticresult = "resultsynthetique/all/result",
+                        savesynthethicdata = "savesyntheticdata/level1",
+                        savesyntheticoption = False,
                         option_model = 0, draw = True):
     
     genpoint_s = genpoint_s
@@ -314,6 +329,8 @@ def Neighbordhoodmethod(genpoint_s = False,createmodel = False,
                              n_samples = n_samples,T_method_low=T_method_low, 
                              T_method_up= T_method_up,namemodel = namemodel,
                              Saveresult = savesyntheticresult,
+                             savesynthethicdata = savesynthethicdata,
+                             savesyntheticoption = savesyntheticoption,
                              draw = draw)
         
   
@@ -324,6 +341,7 @@ def Neighbordhoodmethod(genpoint_s = False,createmodel = False,
                   namemodel=namemodel,n_samples = n_samples,
                   T_method_low=T_method_low, T_method_up= T_method_up,
                   ourmethod_parameter=ourmethod_parameter,
+                  Optionsaveresultreal = Optionsaveresultreal,
                   nameresult=nameresult,draw = draw)
         
  
@@ -340,6 +358,8 @@ def ManuscriptSynthetique():
                                 T_method_low=14, T_method_up= 16,
                                 namemodel= "models/modelhybrid2-32novel", option_model = 2, 
                                 savesyntheticresult = "resultsynthetique/all/result",
+                                savesynthethicdata = "savesyntheticdata/level1",
+                                savesyntheticoption = False,
                                 draw = True)
             p_noise = p_noise + 0.1   
 
@@ -354,6 +374,7 @@ def ManuscriptReal():
                             folder_real_data="glass",n_samples = 1000,
                             namemodel= "models/modelhybrid2-32novel",  
                             saverealresult = "resultsreal/mediumdim",
+                            Optionsaveresultreal = False,
                             draw = True) 
                
 
@@ -364,7 +385,6 @@ def main(cfg: Namespace) -> None:
     flags = [
         cfg.genpoint_s,
         cfg.createmodel,
-        cfg.use_fuzzy,
         cfg.testmodel_synthetic,
         cfg.testmodel_real,
         cfg.deeplearning_methods,
@@ -398,7 +418,10 @@ def main(cfg: Namespace) -> None:
                         p_embedding = cfg.dimension_of_p_embedding, 
                         training_data = cfg.name_training_data,
                         saverealresult= cfg.saverealresult,
+                        Optionsaveresultreal = cfg.Optionsaveresultreal,
                         savesyntheticresult=cfg.savesyntheticresult,
+                        savesyntheticoption=cfg.savesyntheticoption,
+                        savesynthethicdata=cfg.savesynthethicdata,
                         namemodel= cfg.name_model, option_model = cfg.Option_model, 
                         draw = cfg.draw_graphics) 
     else:

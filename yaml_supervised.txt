@@ -1,8 +1,8 @@
 genpoint_s: false
 createmodel: false
 use_fuzzy: false
-testmodel_synthetic: true
-testmodel_real: false
+testmodel_synthetic: false
+testmodel_real: true
 deeplearning_methods: false
 experiments_synthetic: false 
 experiments_real: false
@@ -21,16 +21,19 @@ maxdev_test: 0.3
 
 option_test_synthetique: 0
 dimension_test: 2
-n_synthetic_tests: 50
+n_synthetic_tests: 20
 Hamming_ratio_test: 0.01
 percentage_noise: 0.15
 
 low_method_number: 14
 Up_method_number: 15
 
-realdata: "Highrealdata/d32"
+realdata: "Highrealdata/d32/dsprites/simclr"
 saverealresult: "resultsreal/highdim"
 savesyntheticresult: "resultsynthetique/all/result"
+                
+savesynthethicdata: "savesyntheticdata/level1"
+savesyntheticoption: True
 
 n_samples_per_datasets: 1000
 dimension_of_p_embedding: 10

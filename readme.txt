@@ -15,7 +15,7 @@ It includes:
 - **Real-data processing and evaluation**.
 - **A neighborhood-based clustering method** (our proposed approach).
 - **A large collection of competitor algorithms**.
-- **Deep-learning baselines** (DEC, VADE, IIC, DEPICT, SCAN) specific to tabular and image datasets.
+- **Deep-learning baselines**  (DEC and VADE) specific to tabular and (IIC, DEPICT, SCAN) applied to image data sets.
 - **A complete experimental pipeline** for reproducing all results from the paper.
 - **Modular implementation** fully configurable via command-line arguments or optional YAML configuration.
 
@@ -23,11 +23,13 @@ It includes:
 
 ## 📂 Repository Structure
 
-├── dataGeneration/ # Synthetic dataset generator
+├── dataGeneration/ # Synthetic dataset generator python functions.
 ├── concurrents/ # Implementations of competitor methods
 ├── ToolsCode/ # Utility functions (stats, visualization, I/O)
 ├── models/ # Saved and loaded models
-├── realdata/ # Real datasets
+├── realdata/ # folder for the Real datasets including subfolders
+├── Highrealdata/ # folder for the High Real datasets including subfolders
+├── savesyntheticdata/ # save files generated to test synthetic data.
 ├── resultsreal/ # Results on real datasets
 ├── resultsynthetic/ # Results on synthetic datasets
 ├── config.yaml # Optional YAML configuration
