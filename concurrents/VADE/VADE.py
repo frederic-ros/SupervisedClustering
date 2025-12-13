@@ -258,22 +258,29 @@ def train_vade(X, y=None, latent_dim=10, n_clusters=10, epochs=100, lr=2e-4,
 
     return Z, y_pred, sil
 
-
 # ---------------------
 # Vade orchestration: pretrain AE once, loop n_clusters with GMM init
 # ---------------------
+
 def Vade(X, y=None, n_clusters_low=2, n_clusters_up=9, latent_dim=10, epochs=100,
          pretrain_epochs=100, ae_lr=1e-3, vade_lr=2e-4, verbose=False, device='cpu'):
     """
     Returns best_Z, best_y_pred according to silhouette (protocol unchanged).
+    Robust version: safe automatic exploration of n_clusters.
     """
 
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X)
 
     # Pretrain AE one time
-    ae, Z0 = pretrain_ae(X_scaled, input_dim=X.shape[1], latent_dim=latent_dim,
-                         pretrain_epochs=pretrain_epochs, lr=ae_lr, verbose=verbose)
+    ae, Z0 = pretrain_ae(
+        X_scaled,
+        input_dim=X.shape[1],
+        latent_dim=latent_dim,
+        pretrain_epochs=pretrain_epochs,
+        lr=ae_lr,
+        verbose=verbose
+    )
 
     best_sil = -1.0
     best_n = None
@@ -281,14 +288,47 @@ def Vade(X, y=None, n_clusters_low=2, n_clusters_up=9, latent_dim=10, epochs=100
     best_y_pred = None
 
     for n_clusters in range(n_clusters_low, n_clusters_up + 1):
-        # init GMM on Z0
-        gmm = GaussianMixture(n_components=n_clusters, covariance_type='diag', random_state=42)
-        gmm.fit(Z0)
 
-        # fine-tune VaDE initialized from GMM and AE
-        Z, y_pred, sil = train_vade(X, y=None, latent_dim=latent_dim, n_clusters=n_clusters,
-                                    epochs=epochs, lr=vade_lr, init_gmm=gmm, init_ae=ae,
-                                    verbose=verbose, device=device)
+        # -------------------------
+        # Robust GMM initialization
+        # -------------------------
+        try:
+            gmm = GaussianMixture(
+                n_components=n_clusters,
+                covariance_type='diag',
+                reg_covar=1e-4,   # prevents ill-defined covariance
+                n_init=5,         # avoids degenerate EM solutions
+                random_state=42
+            )
+            gmm.fit(Z0)
+
+            # Optional but recommended: skip degenerate effective clustering
+            labels0 = gmm.predict(Z0)
+            if len(np.unique(labels0)) < 2:
+                if verbose:
+                    print(f"[Skip k={n_clusters}] single effective cluster")
+                continue
+
+        except ValueError as e:
+            if verbose:
+                print(f"[Skip k={n_clusters}] GMM failed: {e}")
+            continue
+
+        # -------------------------
+        # Fine-tune VaDE
+        # -------------------------
+        Z, y_pred, sil = train_vade(
+            X,
+            y=None,
+            latent_dim=latent_dim,
+            n_clusters=n_clusters,
+            epochs=epochs,
+            lr=vade_lr,
+            init_gmm=gmm,
+            init_ae=ae,
+            verbose=verbose,
+            device=device
+        )
 
         unique, counts = np.unique(y_pred, return_counts=True)
         threshold = max(5, int(0.05 * len(y_pred)))
@@ -303,6 +343,8 @@ def Vade(X, y=None, n_clusters_low=2, n_clusters_up=9, latent_dim=10, epochs=100
                 print(f"New best: k={best_n}, sil={best_sil:.4f}")
 
     if best_n is None:
+        if verbose:
+            print("No valid clustering found, returning zeros.")
         best_y_pred = np.zeros(len(X), dtype=int)
         best_Z = np.zeros((len(X), latent_dim))
     else:
@@ -310,6 +352,7 @@ def Vade(X, y=None, n_clusters_low=2, n_clusters_up=9, latent_dim=10, epochs=100
             print(f"Selected best_n={best_n} (sil={best_sil:.4f})")
 
     return best_Z, best_y_pred
+
 
 '''
 # ---------------------
