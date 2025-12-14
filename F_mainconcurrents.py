@@ -196,7 +196,7 @@ def getIndexes(data, y_true, y, noise, noise_m, label_noise,modeselection=0):
 #    Cp = (int)(len(np.unique(y_without))-noise_m)
     Cp = (int)(len(np.unique(y))-noise_m)
     S = 0
-    if modeselection == 1:
+    if modeselection == 1 and len(np.unique(y_without))>1:
         if (Cp > 1) and (Cp<20): S =silhouette_score(data_out, y_without)
         return 0,0,S,0,Cp
     
