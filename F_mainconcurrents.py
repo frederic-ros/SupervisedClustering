@@ -58,7 +58,7 @@ from Demo_RnnDbscan import rnndbscan
 from collections import namedtuple
 from  cutESC import  cutESC
 from KmeansClustering import launchKmeans
-from XmeansClustering import XMeans
+from XmeansClustering import XMeans, XMeansTarget
 from sklearn.cluster import MeanShift
 from F_noise import GetListeNoise, getNovellistwithoutnoise, getDatawithout
 from F_util import ClassificationScore, Selectione
@@ -296,7 +296,9 @@ def R_Kmeans(data, y_true, noise, noise_methode,draw=0):
     
 def R_Xmeans  (data, y_true, noise, noise_methode,draw=0):
     start = time.time()
-    xm = XMeans(data)
+    xm = XMeans(data, kmax=20)
+    #xm = XMeansTarget(data, target_k = len(np.unique(y_true))-noise, kmax=20)
+    
     xm.fit(); y = xm.labels
     end = time.time()
     duration = (end - start)/1
@@ -307,34 +309,45 @@ def R_Xmeans  (data, y_true, noise, noise_methode,draw=0):
     CC = ClassificationScore(data, y,noise_methode,5)
     print(f"XMEAN(time,M,R,S): {duration:.3f}, {M:.3f}, {R:.3f}, {S:.3f} | "
               f"C_true: {Ct:.3f}, C_pred: {Cp:.3f}, Cl: {CC:.3f}")
-    return M,R,S,Ct,Cp,CC
+    if (Cp==1):
+        print("no discovery XMEANS")
+        return 0,0,0,Ct,0,0
+    else:
+        return M,R,S,Ct,Cp,CC
 
 def R_MeanShift(data, y_true, noise, noise_methode,draw=0):
     
-    
+    duration = 0
+    G = False
     rangk = [None, 2, 5, 10]; S_max = -1; k_max=0; 
     for k in rangk:    
         clustering = MeanShift(bandwidth=k).fit(data)
-        M,R,S,Ct,Cp = getIndexes(data, y_true, clustering.labels_, noise, noise_methode, label_noise=-1,modeselection=1)
-        if S > S_max: S_max = S; k_max=k
+        nb_clusters = len(np.unique(clustering.labels_))
+        if nb_clusters > 1:
+            M,R,S,Ct,Cp = getIndexes(data, y_true, clustering.labels_, noise, noise_methode, label_noise=-1,modeselection=1)
+            if S > S_max: S_max = S; k_max=k
     
-    start = time.time()
-    clustering = MeanShift(bandwidth=k_max).fit(data)
-    end = time.time()
-    duration = (end - start)/1
-    y = clustering.labels_
-    M,R,S,Ct,Cp = getIndexes(data, y_true, y, noise,noise_methode,label_noise=-1,modeselection=0)
-    y = clustering.labels_
-    CC = ClassificationScore(data, y,noise_methode,5)
-    label_counts = Counter(y)
-    result = [(label, count) for label, count in label_counts.items()]
-    #print(result)
-    G = Selectione(result,0.8, 50)
+    if (S_max !=-1):
+        start = time.time()
+        clustering = MeanShift(bandwidth=k_max).fit(data)
+        end = time.time()
+        duration = (end - start)/1
+        y = clustering.labels_
+        nb_classe_ok = len(np.unique(y)) > 1
+        if nb_classe_ok == True:
+            M,R,S,Ct,Cp = getIndexes(data, y_true, y, noise,noise_methode,label_noise=-1,modeselection=0)
+            y = clustering.labels_
+            CC = ClassificationScore(data, y,noise_methode,5)
+            label_counts = Counter(y)
+            result = [(label, count) for label, count in label_counts.items()]
+            #print(result)
+            G = Selectione(result,0.8, 50)
     
-    print(f"MEANSHIFT(time,M,R,S): {duration:.3f}, {M:.3f}, {R:.3f}, {S:.3f} | "
-              f"C_true: {Ct:.3f}, C_pred: {Cp:.3f}, Cl: {CC:.3f}")
-    if draw==1:
-        DrawConcurrent(data, y,"MEANSHIFT")
+            print(f"MEANSHIFT(time,M,R,S): {duration:.3f}, {M:.3f}, {R:.3f}, {S:.3f} | "
+                  f"C_true: {Ct:.3f}, C_pred: {Cp:.3f}, Cl: {CC:.3f}")
+            if draw==1:
+                DrawConcurrent(data, y,"MEANSHIFT")
+                
     if G == True:
         return M,R,S,Ct,Cp,CC
     else:
