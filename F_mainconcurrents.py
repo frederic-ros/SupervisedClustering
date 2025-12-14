@@ -319,6 +319,7 @@ def R_MeanShift(data, y_true, noise, noise_methode,draw=0):
     
     duration = 0
     G = False
+    Ct = len(np.unique(y_true)) - noise
     rangk = [None, 2, 5, 10]; S_max = -1; k_max=0; 
     for k in rangk:    
         clustering = MeanShift(bandwidth=k).fit(data)
