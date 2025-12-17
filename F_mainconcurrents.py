@@ -902,7 +902,7 @@ def getnoisemethode(noise_methode):
     noise_methode[9] = 0
     noise_methode[10] = 1
     noise_methode[11] = 1
-    noise_methode[12] = 1
+    noise_methode[12] = 2
     noise_methode[13] = 1
     noise_methode[14] = 1
     noise_methode[15] = 0

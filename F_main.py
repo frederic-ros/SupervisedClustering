@@ -55,16 +55,16 @@ def get_config() -> Namespace:
     parser.add_argument("--genpoint_s", type=bool, default=False)
     parser.add_argument("--createmodel", type=bool, default=False)
     parser.add_argument("--use_fuzzy", type=bool, default=True)
-    parser.add_argument("--testmodel_synthetic", type=bool, default=True)
+    parser.add_argument("--testmodel_synthetic", type=bool, default=False)
     parser.add_argument("--testmodel_real", type=bool, default=False)
     parser.add_argument("--deeplearning_methods", type=bool, default=False)
-    parser.add_argument("--experiments_synthetic", type=bool, default=False)
+    parser.add_argument("--experiments_synthetic", type=bool, default=True)
     parser.add_argument("--experiments_real", type=bool, default=False)
     parser.add_argument("--epoch", type=int, default=1)
     parser.add_argument("--dev_training", type=float, default=0.3)
     parser.add_argument("--dimtraining_start", type=int, default=2)
     parser.add_argument("--dimtraining_end", type=int, default= 33)
-    parser.add_argument("--ourmethod_parameter", type=float, nargs='+', default=[0.5, 0.6, 0.7, 0.8])
+    parser.add_argument("--ourmethod_parameter", type=float, nargs='+', default=[0.6, 0.7, 0.8, 0.9])
     parser.add_argument("--Hamming_ratio_training", type=float, default=0.01)   
     parser.add_argument("--n_set_per_dimension", type=int, default=1)
     parser.add_argument("--maxdev_test", type=float, default=0.33)
@@ -72,7 +72,7 @@ def get_config() -> Namespace:
     parser.add_argument("--dimension_test", type=int, default=2)
     parser.add_argument("--n_synthetic_tests", type=int, default=10)
     parser.add_argument("--savesyntheticoption", type=bool, default=True)
-    parser.add_argument("--savesynthethicdata", type=str, default="savesyntheticdata/level1")
+    parser.add_argument("--savesynthethicdata", type=str, default="savesyntheticdata/level2")
     parser.add_argument("--Hamming_ratio_test", type=float, default=0.0)
     parser.add_argument("--percentage_noise", type=float, default=0.15)
     parser.add_argument("--low_method_number", type=int, default=14)
@@ -256,7 +256,7 @@ def TestModelSynthetique(n=1,dim=2, max_dev = 0.4,hamming_test=0.1,
                            p_noise=p_noise, n_clusters=C[i], index_random=i)
         
         if savesyntheticoption == True: #option save synthetic.
-            F_name = savesynthethicdata + "/synthetic_" + str(i) + ".txt" 
+            F_name = savesynthethicdata + "/synthetic_" + "d" + str(p) + "-" + str(i) + ".txt" 
             save_xy_to_txt(X, y, filename=F_name)
             
         if Competiteurs == True: R.append(Testcompetitors(X, y, run, noise, noise_methode,
@@ -347,20 +347,21 @@ def Neighbordhoodmethod(genpoint_s = False,createmodel = False,
  
 #######################################################################################
 def ManuscriptSynthetique():
-    v_dev=[0.3,0.4]
-    for v_dim in range(2,3):
+    v_dev=[0.33]
+    n_test_per_dim = 50
+    for v_dim in range(2,33):
         p_noise = 0.15
         for noise in range(0,1):
-            Neighbordhoodmethod(ourmethod_parameter =[0.8,0.9],
+            Neighbordhoodmethod(ourmethod_parameter =[0.6,0.7,0.8,0.9],
                                 testmodel_s = True, max_dev= v_dev[0], 
-                                option = 2, dimtest = v_dim,n_test = 1,
-                                hamming_test=0.01,p_noise=p_noise, 
-                                T_method_low=14, T_method_up= 16,
-                                namemodel= "models/modelhybrid2-32novel", option_model = 2, 
+                                option = 0, dimtest = v_dim,n_test = n_test_per_dim,
+                                hamming_test=0.05,p_noise=p_noise, 
+                                T_method_low=11, T_method_up= 12,
+                                namemodel= "models/modelhybrid2-32novel", option_model = 0, 
                                 savesyntheticresult = "resultsynthetique/all/result",
                                 savesynthethicdata = "savesyntheticdata/level1",
                                 savesyntheticoption = False,
-                                draw = True)
+                                draw = False)
             p_noise = p_noise + 0.1   
 
 #######################################################################################
