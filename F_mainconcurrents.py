@@ -24,6 +24,7 @@ sys.path.insert(0,"concurrents/DECSIMPLIFIE")
 sys.path.insert(0,"concurrents/VADE")
 sys.path.insert(0,"ToolsCode")
 
+
 from F_visu import plot_density_with_projection
 import warnings
 warnings.filterwarnings('ignore')
